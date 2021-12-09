@@ -77,4 +77,16 @@ class Attachment {
         coupledAttachment.setOut(this.in);
         coupled.interestOps(SelectionKey.OP_READ | SelectionKey.OP_WRITE);
     }
+
+    public void addCoupledWrite() {
+        coupled.interestOps(coupled.interestOps() | SelectionKey.OP_WRITE);
+    }
+
+    public void addCoupledRead() {
+        coupled.interestOps(coupled.interestOps() | SelectionKey.OP_READ);
+    }
+
+    public boolean isDecoupled(){
+        return (coupled == null);
+    }
 }
