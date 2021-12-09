@@ -1,10 +1,13 @@
 package me.hikari.socks;
 
+import org.xbill.DNS.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 
 import javax.naming.ldap.SortKey;
 import java.io.IOException;
+import java.net.DatagramPacket;
+import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.nio.channels.*;
 
@@ -125,14 +128,60 @@ public class TinyServer {
         SocksUtils.getAttachment(key).setType(Type.CONN_READ);
     }
 
-    private void replySocksConn(SelectionKey key) {
-        // TODO: stub
+    private void replySocksConn(SelectionKey key) throws Exception {
+        if(SocksMessage.inTooSmall(key, SocksMessage.CONN_SMALLNESS)){
+            log.warn("conn: buffer too small; waiting");
+            return;
+        }
+        if(SocksMessage.wrongVersion(key)){
+            // yea i hate other users of proxy, wdya
+            throw new Exception("Wrong version, SOCKS5 expected");
+        }
+        if(SocksMessage.wrongCommand(key)){
+            // yea i hate other users of proxy, wdya
+            throw new Exception("Wrong command, 0x01 expected");
+        }
+        if(SocksMessage.wrongAddrType(key)){
+            // yea i hate other users of proxy, wdya
+            throw new Exception("Wrong addrtype, ipv4 or host expected");
+        }
+
+        if(SocksMessage.isIpv4(key)){
+            var addr = InetAddress.getByAddress(SocksMessage.getIpv4(key));
+            var port = SocksMessage.getPort(key, SocksMessage.IP_PORTPOS);
+
+            SocksUtils.couple(addr, port, key);
+            key.interestOps(0);
+        } else
+            if(SocksMessage.isHost(key)){
+                if(SocksMessage.inTooSmall(key, SocksMessage.HOST_SMALLNESS)) {
+                    log.warn("hostname conn: buffer too small; waiting");
+                    return;
+                }
+                //TODO if too much?
+                var hostname = SocksMessage.getHost(key);
+                var port = SocksMessage.getPort(key, SocksMessage.HOST_PORTPOS);
+
+                key.interestOps(0);
+
+                registerHostResolve(hostname, port, key);
+            }
+
+    }
+
+    private void registerHostResolve(String hostname, int port, SelectionKey key) throws IOException {
+        var dnsChan = DatagramChannel.open();
+        dnsChan.connect(ResolverConfig.getCurrentConfig().server());
+        dnsChan.configureBlocking(false);
+
+        var dnsKey = dnsChan.register(key.selector(), SelectionKey.OP_WRITE);
+        var dnsAttach = new Attachment(Type.DNS_WRITE);
     }
 
     private void replySocksAuth(SelectionKey key) throws Exception {
         var at = SocksUtils.getAttachment(key);
 
-        if(SocksMessage.inTooSmall(key)){
+        if(SocksMessage.inTooSmall(key, SocksMessage.AUTH_SMALLNESS)){
             log.warn("auth: buffer too small; waiting");
             return;
         }

@@ -32,6 +32,8 @@ class Attachment {
     private ByteBuffer out;
     private SelectionKey coupled;
 
+    int port; // for after dns resolving
+
     public Attachment(){
         this.in = ByteBuffer.allocate(BUFFER_CAPACITY);
     }

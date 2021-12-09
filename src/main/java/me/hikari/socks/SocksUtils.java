@@ -1,6 +1,7 @@
 package me.hikari.socks;
 
 import java.io.IOException;
+import java.net.InetAddress;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.SocketChannel;
 
@@ -31,5 +32,9 @@ public class SocksUtils {
 
     public static void useInAsOut(SelectionKey key) {
         getAttachment(key).setOut(getAttachment(key).getIn());
+    }
+
+    public static void couple(InetAddress addr, int port, SelectionKey key) throws IOException {
+        getAttachment(key).couple(addr, port, key);
     }
 }
