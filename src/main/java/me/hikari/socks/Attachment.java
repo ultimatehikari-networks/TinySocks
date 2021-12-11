@@ -32,7 +32,7 @@ class Attachment {
     private ByteBuffer out;
     private SelectionKey coupled;
 
-    int port; // for after dns resolving
+    private int port; // for after dns resolving
 
     public Attachment(){
         this.in = ByteBuffer.allocate(BUFFER_CAPACITY);
@@ -41,6 +41,12 @@ class Attachment {
     public Attachment(Type type){
         this();
         this.type = type;
+    }
+
+    public Attachment(int port, SelectionKey key, Type type){
+        this(type);
+        this.port = port;
+        this.coupled = key;
     }
 
     public void decouple() {
@@ -81,14 +87,18 @@ class Attachment {
     }
 
     public void addCoupledWrite() {
-        coupled.interestOps(coupled.interestOps() | SelectionKey.OP_WRITE);
+        coupled.interestOpsOr(SelectionKey.OP_WRITE);
     }
 
     public void addCoupledRead() {
-        coupled.interestOps(coupled.interestOps() | SelectionKey.OP_READ);
+        coupled.interestOpsOr(SelectionKey.OP_READ);
     }
 
     public boolean isDecoupled(){
         return (coupled == null);
+    }
+
+    public void useInAsOut(){
+        this.out = this.in;
     }
 }

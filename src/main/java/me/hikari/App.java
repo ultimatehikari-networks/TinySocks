@@ -23,6 +23,7 @@ public class App
     public static void main( String[] args ) throws IOException {
         if(args.length < 1){
             log.error("TinySOCKSServer args : port");
+            System.exit(-1);
         }
         var port = parsePort(args[0]);
 

@@ -37,4 +37,15 @@ public class SocksUtils {
     public static void couple(InetAddress addr, int port, SelectionKey key) throws IOException {
         getAttachment(key).couple(addr, port, key);
     }
+
+    public static void close(SelectionKey key) throws IOException {
+        key.cancel();
+        key.channel().close();
+        SocksUtils.getAttachment(key).decouple();
+    }
+
+    public static void partiallyClose(SelectionKey key) throws IOException {
+        key.cancel();
+        key.channel().close();
+    }
 }

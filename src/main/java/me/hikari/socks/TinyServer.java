@@ -3,6 +3,7 @@ package me.hikari.socks;
 import org.xbill.DNS.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
+import org.xbill.DNS.Record;
 
 import javax.naming.ldap.SortKey;
 import java.io.IOException;
@@ -48,7 +49,7 @@ public class TinyServer {
                         }
                     } catch (Exception e) {
                         e.printStackTrace();
-                        close(key);
+                        SocksUtils.close(key);
                     }
                 }
             }
@@ -76,7 +77,10 @@ public class TinyServer {
         }else{
             if(!SocksUtils.tryReadToBuffer(key)){
                 log.info("Channel closed, terminating connection:", key);
-                close(key);
+                SocksUtils.close(key);
+                if(attach.getType() == Type.DNS_READ){
+                    throw new Exception("Bad dns reply");
+                }
             }
             switch (attach.getType()){
                 case AUTH_READ -> replySocksAuth(key);
@@ -112,7 +116,7 @@ public class TinyServer {
 
     private void prepareCoupledRead(SelectionKey key) throws IOException {
         if(SocksUtils.isDecoupled(key)){
-            close(key);
+            SocksUtils.close(key);
             return;
         }
         // disable write + enable coupled read
@@ -175,7 +179,22 @@ public class TinyServer {
         dnsChan.configureBlocking(false);
 
         var dnsKey = dnsChan.register(key.selector(), SelectionKey.OP_WRITE);
-        var dnsAttach = new Attachment(Type.DNS_WRITE);
+        var dnsAttach = new Attachment(port, key, Type.DNS_WRITE);
+
+        var message = new Message();
+        var record = Record.newRecord(Name.fromString(hostname + '.').canonicalize(), org.xbill.DNS.Type.A, DClass.IN);
+        message.addRecord(record, Section.QUESTION);
+
+        var header = message.getHeader();
+        header.setFlag(Flags.AD);
+        header.setFlag(Flags.RD);
+
+        dnsAttach.getIn().put(message.toWire()).flip();
+        dnsAttach.useInAsOut();
+
+        dnsKey.attach(dnsAttach);
+
+        log.info("registered dns resolve");
     }
 
     private void replySocksAuth(SelectionKey key) throws Exception {
@@ -202,12 +221,5 @@ public class TinyServer {
         SocksUtils.getAttachment(key).setType(Type.AUTH_WRITE);
         key.interestOps(SelectionKey.OP_WRITE);
     }
-
-    private void close(SelectionKey key) throws IOException {
-        key.cancel();
-        key.channel().close();
-        SocksUtils.getAttachment(key).decouple();
-    }
-
 
 }
