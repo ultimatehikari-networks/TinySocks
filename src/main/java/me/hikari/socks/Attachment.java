@@ -12,6 +12,7 @@ import java.nio.channels.SelectionKey;
 import java.nio.channels.SocketChannel;
 
 enum Type {
+    NONE,
     READ,
     WRITE,
     CONN_READ,
@@ -88,15 +89,19 @@ class Attachment {
         var coupledAttachment = SocksUtils.getAttachment(this.coupled);
         this.out = coupledAttachment.getIn();
         coupledAttachment.setOut(this.in);
-        coupled.interestOps(SelectionKey.OP_READ | SelectionKey.OP_WRITE);
+        coupled.interestOps(SelectionKey.OP_READ);
     }
 
     public void addCoupledWrite() {
         coupled.interestOpsOr(SelectionKey.OP_WRITE);
+        SocksUtils.getAttachment(coupled).setType(Type.WRITE);
+        type = Type.NONE;
     }
 
     public void addCoupledRead() {
         coupled.interestOpsOr(SelectionKey.OP_READ);
+        SocksUtils.getAttachment(coupled).setType(Type.READ);
+        type = Type.NONE;
     }
 
     public boolean isDecoupled(){

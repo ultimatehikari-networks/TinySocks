@@ -31,6 +31,7 @@ public class TinyServer {
 
         while (true) {
             selector.select();
+            log.info(selector.keys());
             var iterator = selector.selectedKeys().iterator();
             while (iterator.hasNext()) {
                 var key = iterator.next();
@@ -67,7 +68,7 @@ public class TinyServer {
         log.info(key);
         SocksUtils.getChannel(key).finishConnect();
         SocksUtils.getAttachment(key).finishCouple();
-        key.interestOps(0);
+        key.interestOps(SelectionKey.OP_READ);
     }
 
     private void handleRead(SelectionKey key) throws Exception {
@@ -98,7 +99,13 @@ public class TinyServer {
             switch (attach.getType()) {
                 case AUTH_WRITE -> authWrite(key);
                 case DNS_WRITE -> DnsUtils.write(key);
-                default -> prepareCoupledRead(key);
+                default -> {
+                    if(SocksUtils.getAttachment(key).isDecoupled()){
+                        SocksUtils.close(key);
+                    }else {
+                        prepareCoupledRead(key);
+                    }
+                }
             }
         }
     }
