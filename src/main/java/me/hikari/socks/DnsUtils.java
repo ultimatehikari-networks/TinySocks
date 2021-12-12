@@ -11,7 +11,7 @@ import java.nio.channels.SelectionKey;
 @Log4j2
 public class DnsUtils {
     public static void read(SelectionKey key) throws IOException {
-        log.info("read dns request");
+        log.info(key);
 
         var attach = SocksUtils.getAttachment(key);
 
@@ -32,7 +32,7 @@ public class DnsUtils {
     }
 
     public static void write(SelectionKey key) {
-        log.info("wrote dns request");
+        log.info(key);
 
         SocksUtils.clearOut(key);
         key.interestOpsOr(SelectionKey.OP_READ);

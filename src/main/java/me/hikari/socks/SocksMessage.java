@@ -1,9 +1,12 @@
 package me.hikari.socks;
 
+import lombok.extern.log4j.Log4j2;
+
 import java.nio.ByteBuffer;
 import java.nio.channels.SelectionKey;
 import java.util.Arrays;
 
+@Log4j2
 public class SocksMessage {
     public static final byte HOST_SMALLNESS = -1;
     public static final byte AUTH_SMALLNESS = 2;
@@ -17,7 +20,7 @@ public class SocksMessage {
     private static final byte STATUS_GRANTED = 0x00;
     private static final byte NO_AUTH = 0x00;
     private static final byte IP_V4 = 0x01;
-    private static final byte HOST = 0x02;
+    private static final byte HOST = 0x03;
     private static final byte NOB = 0x00; // empty byte
 
     public static void putConnResponse(ByteBuffer in) {
@@ -43,6 +46,7 @@ public class SocksMessage {
             return (SocksUtils.getAttachment(key).getIn().position() < smallness);
         } else {
             var len = getHostLen(key);
+            log.info("host len in smallness check: " + len);
             return (SocksUtils.getAttachment(key).getIn().position() < HOST_START + len + PORT_LEN);
         }
     }
@@ -67,9 +71,10 @@ public class SocksMessage {
     }
 
     public static boolean methodsReceived(SelectionKey key) {
-        var data = SocksUtils.getAttachment(key).getIn().array();
-        var methodsCount = data[1];
-        return (data.length - 2 == methodsCount);
+        var in = SocksUtils.getAttachment(key).getIn();
+        var methodsCount = in.array()[1];
+        var pos = in.position();
+        return (pos - 2 == methodsCount);
     }
 
     public static boolean noAuthNotFound(SelectionKey key) {
@@ -100,7 +105,7 @@ public class SocksMessage {
     }
 
     public static int getHostLen(SelectionKey key){
-        return SocksUtils.getAttachment(key).getIn().array()[5];
+        return SocksUtils.getAttachment(key).getIn().array()[4];
     }
 
     public static String getHost(SelectionKey key){

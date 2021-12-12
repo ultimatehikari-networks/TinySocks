@@ -1,10 +1,14 @@
 package me.hikari.socks;
 
+import lombok.extern.log4j.Log4j2;
+
 import java.io.IOException;
 import java.net.InetAddress;
+import java.nio.channels.ByteChannel;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.SocketChannel;
 
+@Log4j2
 public class SocksUtils {
     public static Attachment getAttachment(SelectionKey key){
         return (Attachment) key.attachment();
@@ -12,6 +16,9 @@ public class SocksUtils {
 
     public static SocketChannel getChannel(SelectionKey key){
         return (SocketChannel) key.channel();
+    }
+    public static ByteChannel getByteChannel(SelectionKey key){
+        return (ByteChannel) key.channel();
     }
 
     public static void clearIn(SelectionKey key){
@@ -27,7 +34,7 @@ public class SocksUtils {
     }
 
     public static boolean tryReadToBuffer(SelectionKey key) throws IOException {
-        return (getChannel(key).read(getAttachment(key).getIn()) > 0);
+        return (getByteChannel(key).read(getAttachment(key).getIn()) > 0);
     }
 
     public static void useInAsOut(SelectionKey key) {
@@ -39,6 +46,7 @@ public class SocksUtils {
     }
 
     public static void close(SelectionKey key) throws IOException {
+        log.info(key);
         key.cancel();
         key.channel().close();
         SocksUtils.getAttachment(key).decouple();
@@ -47,5 +55,13 @@ public class SocksUtils {
     public static void partiallyClose(SelectionKey key) throws IOException {
         key.cancel();
         key.channel().close();
+    }
+
+    public static boolean tryWriteToBuffer(SelectionKey key) throws IOException {
+        return (getByteChannel(key).write(getAttachment(key).getOut()) > 0);
+    }
+
+    public static boolean outIsEmpty(SelectionKey key) {
+        return (getAttachment(key).getOut().remaining() == 0);
     }
 }

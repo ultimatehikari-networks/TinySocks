@@ -27,7 +27,7 @@ public class App
         }
         var port = parsePort(args[0]);
 
-        log.info( "Tiny server starting on port" );
+        log.info( "Tiny server starting on " + port);
         TinyServer server = new TinyServer(port);
         server.start();
     }

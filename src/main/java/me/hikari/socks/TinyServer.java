@@ -57,14 +57,14 @@ public class TinyServer {
     }
 
     private void handleAccept(SelectionKey key) throws IOException {
-        log.info("Accept:", key);
+        log.info(key);
         var channel = ((ServerSocketChannel) key.channel()).accept();
         channel.configureBlocking(false);
         channel.register(key.selector(), SelectionKey.OP_READ);
     }
 
     private void handleConnect(SelectionKey key) throws IOException {
-        log.info("Connect:", key);
+        log.info(key);
         SocksUtils.getChannel(key).finishConnect();
         SocksUtils.getAttachment(key).finishCouple();
         key.interestOps(0);
@@ -76,7 +76,6 @@ public class TinyServer {
             prepareAttachment(key);
         }else{
             if(!SocksUtils.tryReadToBuffer(key)){
-                log.info("Channel closed, terminating connection:", key);
                 SocksUtils.close(key);
                 if(attach.getType() == Type.DNS_READ){
                     throw new Exception("Bad dns reply");
@@ -93,22 +92,26 @@ public class TinyServer {
 
     private void handleWrite(SelectionKey key) throws IOException {
         var attach = SocksUtils.getAttachment(key);
-        switch(attach.getType()){
-            case AUTH_WRITE -> authWrite(key);
-            case DNS_WRITE -> DnsUtils.write(key);
-            default -> prepareCoupledRead(key);
+        if(!SocksUtils.tryWriteToBuffer(key)){
+            SocksUtils.close(key);
+        }else if( SocksUtils.outIsEmpty(key)) {
+            switch (attach.getType()) {
+                case AUTH_WRITE -> authWrite(key);
+                case DNS_WRITE -> DnsUtils.write(key);
+                default -> prepareCoupledRead(key);
+            }
         }
     }
 
     private void prepareAttachment(SelectionKey key) {
-        log.info("Preparing attachment for client");
+        log.info(key);
         key.attach(new Attachment(Type.AUTH_READ));
     }
 
     private void prepareCoupledWrite(SelectionKey key) throws IOException {
         // couple exists 'cause of conn earlier in switch
         // disable read + enable coupled read
-        log.info("Preparing coupled to write");
+        log.info(key);
         SocksUtils.clearIn(key);
         SocksUtils.getAttachment(key).addCoupledWrite();
         key.interestOps(key.interestOps() ^ SelectionKey.OP_READ);
@@ -120,19 +123,21 @@ public class TinyServer {
             return;
         }
         // disable write + enable coupled read
-        log.info("Preparing coupled to read");
+        log.info(key);
         SocksUtils.clearOut(key);
         SocksUtils.getAttachment(key).addCoupledRead();
         key.interestOps(key.interestOps() ^ SelectionKey.OP_WRITE);
     }
 
     private void authWrite(SelectionKey key) {
+        log.info(key);
         SocksUtils.clearOut(key);
         key.interestOps(SelectionKey.OP_READ);
         SocksUtils.getAttachment(key).setType(Type.CONN_READ);
     }
 
     private void replySocksConn(SelectionKey key) throws Exception {
+        log.info(key);
         if(SocksMessage.inTooSmall(key, SocksMessage.CONN_SMALLNESS)){
             log.warn("conn: buffer too small; waiting");
             return;
@@ -174,6 +179,7 @@ public class TinyServer {
     }
 
     private void registerHostResolve(String hostname, int port, SelectionKey key) throws IOException {
+        log.info(key);
         var dnsChan = DatagramChannel.open();
         dnsChan.connect(ResolverConfig.getCurrentConfig().server());
         dnsChan.configureBlocking(false);
@@ -198,6 +204,7 @@ public class TinyServer {
     }
 
     private void replySocksAuth(SelectionKey key) throws Exception {
+        log.info(key);
         var at = SocksUtils.getAttachment(key);
 
         if(SocksMessage.inTooSmall(key, SocksMessage.AUTH_SMALLNESS)){
