@@ -101,7 +101,7 @@ public class SocksMessage {
             actualPos = HOST_START + getHostLen(key);
         }
         var data = SocksUtils.getAttachment(key).getIn().array();
-        return ((data[actualPos] & 0xff) << 8) + (data[actualPos] & 0xff);
+        return ((data[actualPos] & 0xff) << 8) + (data[actualPos + 1] & 0xff);
     }
 
     public static int getHostLen(SelectionKey key){
@@ -110,6 +110,6 @@ public class SocksMessage {
 
     public static String getHost(SelectionKey key){
         var data = SocksUtils.getAttachment(key).getIn().array();
-        return new String(Arrays.copyOfRange(data, HOST_START, getHostLen(key)));
+        return new String(Arrays.copyOfRange(data, HOST_START, HOST_START + getHostLen(key)));
     }
 }

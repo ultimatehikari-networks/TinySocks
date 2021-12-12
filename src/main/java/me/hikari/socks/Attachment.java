@@ -66,7 +66,7 @@ class Attachment {
 
         var coupleChannel = SocketChannel.open();
         coupleChannel.configureBlocking(false);
-        coupleChannel.connect(new InetSocketAddress(connectAddr, connectPort));
+        var isConnected = coupleChannel.connect(new InetSocketAddress(connectAddr, connectPort));
 
         this.coupled = coupleChannel.register(parentKey.selector(), SelectionKey.OP_CONNECT);
 
@@ -75,10 +75,15 @@ class Attachment {
         this.coupled.attach(coupledAttachment);
 
         this.in.clear();
+
+        if(isConnected) {
+            log.info("finished immediately");
+            coupledAttachment.finishCouple();
+        }
     }
 
     public void finishCouple(){
-        log.info("finishing coupling:", this);
+        log.info(this);
         SocksMessage.putConnResponse(this.in);
         var coupledAttachment = SocksUtils.getAttachment(this.coupled);
         this.out = coupledAttachment.getIn();

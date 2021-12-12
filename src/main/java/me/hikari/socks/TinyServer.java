@@ -170,6 +170,7 @@ public class TinyServer {
                 //TODO if too much?
                 var hostname = SocksMessage.getHost(key);
                 var port = SocksMessage.getPort(key, SocksMessage.HOST_PORTPOS);
+                log.info("resolving '" + hostname + "' on " + port);
 
                 key.interestOps(0);
 
