@@ -32,13 +32,13 @@ public class SocksMessage {
                 IP_V4,
                 NOB, NOB, NOB, NOB,
                 NOB, NOB,
-        }).flip();
+        });
     }
 
     public static void putNoAuthResponse(SelectionKey key) {
         SocksUtils.useInAsOut(key);
         SocksUtils.clearOut(key);
-        SocksUtils.getAttachment(key).getOut().put(new byte[] {SOCKS_VERSION, NO_AUTH}).flip();
+        SocksUtils.getAttachment(key).getOut().put(new byte[] {SOCKS_VERSION, NO_AUTH});
     }
 
     public static boolean inTooSmall(SelectionKey key, byte smallness){

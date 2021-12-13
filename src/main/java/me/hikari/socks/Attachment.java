@@ -56,9 +56,6 @@ class Attachment {
         if (sendoff != null) {
             this.coupled = null;
             if(sendoff.isValid()) {
-                if ((sendoff.interestOps() & SelectionKey.OP_WRITE) == 0) {
-                    SocksUtils.getAttachment(sendoff).out.flip();
-                }
                 sendoff.interestOps(SelectionKey.OP_WRITE);
             }
         }

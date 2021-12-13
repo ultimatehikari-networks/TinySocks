@@ -60,7 +60,10 @@ public class SocksUtils {
     }
 
     public static boolean tryWriteToBuffer(SelectionKey key) throws IOException {
-        var res = getByteChannel(key).write(getAttachment(key).getOut());
+        log.info(key.channel());
+        var buf = getAttachment(key).getOut();
+        buf.flip();
+        var res = getByteChannel(key).write(buf);
         log.info("write2buffer: " + res);
         return (res > 0);
     }

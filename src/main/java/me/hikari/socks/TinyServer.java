@@ -123,7 +123,6 @@ public class TinyServer {
         // couple exists 'cause of conn earlier in switch
         // disable read + enable coupled read
         log.info(key);
-        SocksUtils.clearIn(key);
         SocksUtils.getAttachment(key).addCoupledWrite();
         key.interestOps(key.interestOps() ^ SelectionKey.OP_READ);
     }
@@ -207,7 +206,7 @@ public class TinyServer {
         header.setFlag(Flags.AD);
         header.setFlag(Flags.RD);
 
-        dnsAttach.getIn().put(message.toWire()).flip();
+        dnsAttach.getIn().put(message.toWire());
         dnsAttach.useInAsOut();
 
         dnsKey.attach(dnsAttach);
