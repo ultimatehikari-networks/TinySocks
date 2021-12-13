@@ -34,7 +34,9 @@ public class SocksUtils {
     }
 
     public static boolean tryReadToBuffer(SelectionKey key) throws IOException {
-        return (getByteChannel(key).read(getAttachment(key).getIn()) > 0);
+        var res = getByteChannel(key).read(getAttachment(key).getIn());
+        log.info("read2buffer: " + res);
+        return (res > 0);
     }
 
     public static void useInAsOut(SelectionKey key) {
@@ -58,7 +60,9 @@ public class SocksUtils {
     }
 
     public static boolean tryWriteToBuffer(SelectionKey key) throws IOException {
-        return (getByteChannel(key).write(getAttachment(key).getOut()) > 0);
+        var res = getByteChannel(key).write(getAttachment(key).getOut());
+        log.info("write2buffer: " + res);
+        return (res > 0);
     }
 
     public static boolean outIsEmpty(SelectionKey key) {

@@ -68,7 +68,7 @@ public class TinyServer {
         log.info(key);
         SocksUtils.getChannel(key).finishConnect();
         SocksUtils.getAttachment(key).finishCouple();
-        key.interestOps(SelectionKey.OP_READ);
+        key.interestOps(0);
     }
 
     private void handleRead(SelectionKey key) throws Exception {
@@ -116,6 +116,10 @@ public class TinyServer {
     }
 
     private void prepareCoupledWrite(SelectionKey key) throws IOException {
+        if(SocksUtils.isDecoupled(key)){
+            SocksUtils.close(key);
+            return;
+        }
         // couple exists 'cause of conn earlier in switch
         // disable read + enable coupled read
         log.info(key);

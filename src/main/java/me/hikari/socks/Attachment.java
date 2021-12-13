@@ -51,14 +51,16 @@ class Attachment {
     }
 
     public void decouple() {
-        log.info("decoupling:", this);
+        log.info(this);
         var sendoff = this.coupled;
         if (sendoff != null) {
             this.coupled = null;
-            if ((sendoff.interestOps() & SelectionKey.OP_WRITE) == 0) {
-                SocksUtils.getAttachment(sendoff).out.flip();
+            if(sendoff.isValid()) {
+                if ((sendoff.interestOps() & SelectionKey.OP_WRITE) == 0) {
+                    SocksUtils.getAttachment(sendoff).out.flip();
+                }
+                sendoff.interestOps(SelectionKey.OP_WRITE);
             }
-            sendoff.interestOps(SelectionKey.OP_WRITE);
         }
     }
 
@@ -89,7 +91,7 @@ class Attachment {
         var coupledAttachment = SocksUtils.getAttachment(this.coupled);
         this.out = coupledAttachment.getIn();
         coupledAttachment.setOut(this.in);
-        coupled.interestOps(SelectionKey.OP_READ);
+        coupled.interestOps(SelectionKey.OP_READ | SelectionKey.OP_WRITE);
     }
 
     public void addCoupledWrite() {
