@@ -13,8 +13,6 @@ import java.nio.channels.SocketChannel;
 
 enum Type {
     NONE,
-    READ,
-    WRITE,
     CONN_READ,
     CONN_WRITE,
     DNS_READ,
@@ -93,13 +91,13 @@ class Attachment {
 
     public void addCoupledWrite() {
         coupled.interestOpsOr(SelectionKey.OP_WRITE);
-        SocksUtils.getAttachment(coupled).setType(Type.WRITE);
+        SocksUtils.getAttachment(coupled).setType(Type.NONE);
         type = Type.NONE;
     }
 
     public void addCoupledRead() {
         coupled.interestOpsOr(SelectionKey.OP_READ);
-        SocksUtils.getAttachment(coupled).setType(Type.READ);
+        SocksUtils.getAttachment(coupled).setType(Type.NONE);
         type = Type.NONE;
     }
 

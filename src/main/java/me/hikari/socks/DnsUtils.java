@@ -22,7 +22,7 @@ public class DnsUtils {
             log.info("Resolved: " + maybeRecord.get().rdataToString());
 
             SocksUtils.getAttachment(attach.getCoupled()).couple(addr, attach.getPort(), attach.getCoupled());
-            SocksUtils.getAttachment(attach.getCoupled()).setType(Type.READ);
+            SocksUtils.getAttachment(attach.getCoupled()).setType(Type.NONE);
             key.interestOps(0);
             SocksUtils.partiallyClose(key);
         } else {
